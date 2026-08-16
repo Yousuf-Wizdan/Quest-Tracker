@@ -4,6 +4,10 @@ export interface WhyThisInput {
   areaTitle: string;
 }
 
+export interface ProposeStepsInput {
+  questTitle: string;
+}
+
 export type SystemMessageKind = "moved" | "skipped" | "behind";
 
 export interface SystemMessageInput {

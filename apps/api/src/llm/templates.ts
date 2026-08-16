@@ -1,8 +1,14 @@
-import type { LlmText, WhyThisInput, SystemMessageInput } from "./types";
+import type { LlmText, ProposeStepsInput, WhyThisInput, SystemMessageInput } from "./types";
 
 export function renderWhyThisTemplate(input: WhyThisInput): LlmText {
   return {
     text: `Complete ${input.questTitle} now because it directly advances ${input.goalTitle} through ${input.areaTitle}.`,
+  };
+}
+
+export function renderProposeStepsTemplate(input: ProposeStepsInput): LlmText {
+  return {
+    text: `Break ${input.questTitle} into a warm-up, a focused middle step, and a review step.`,
   };
 }
 

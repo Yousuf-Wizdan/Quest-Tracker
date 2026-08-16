@@ -1,5 +1,5 @@
-import { LlmError, type LlmText, type LlmTransport, type SystemMessageInput, type WhyThisInput } from "./types";
-import { renderSystemMessageTemplate, renderWhyThisTemplate } from "./templates";
+import { LlmError, type LlmText, type LlmTransport, type ProposeStepsInput, type SystemMessageInput, type WhyThisInput } from "./types";
+import { renderProposeStepsTemplate, renderSystemMessageTemplate, renderWhyThisTemplate } from "./templates";
 
 export interface LlmResult {
   source: "llm" | "template";
@@ -12,10 +12,12 @@ export interface LlmClientDeps {
 
 export interface LlmClient {
   explainWhy(input: WhyThisInput): Promise<LlmResult>;
+  proposeSteps(input: ProposeStepsInput): Promise<LlmResult>;
   systemMessage(input: SystemMessageInput): Promise<LlmResult>;
 }
 
 const WHY_SYSTEM = "You are ASCENT's planner. Explain the connection between today's Quest and the user's bigger Goal in one sentence.";
+const STEPS_SYSTEM = "You are ASCENT's planner. Propose three concrete next Steps for the Quest.";
 const MESSAGE_SYSTEM = "You are ASCENT's planner. Write a short, data-backed System Message in one sentence.";
 
 export function createLlmClient(deps: LlmClientDeps): LlmClient {
@@ -40,6 +42,11 @@ export function createLlmClient(deps: LlmClientDeps): LlmClient {
     systemMessage(input: SystemMessageInput): Promise<LlmResult> {
       const prompt = `Kind: ${input.kind}\nQuest: ${input.questTitle}`;
       return withFallback(prompt, MESSAGE_SYSTEM, renderSystemMessageTemplate(input));
+    },
+
+    proposeSteps(input: ProposeStepsInput): Promise<LlmResult> {
+      const prompt = `Quest: ${input.questTitle}`;
+      return withFallback(prompt, STEPS_SYSTEM, renderProposeStepsTemplate(input));
     },
   };
 }
