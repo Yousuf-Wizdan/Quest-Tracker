@@ -1,0 +1,18 @@
+{
+  "name": "ascent",
+  "private": true,
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "pnpm --filter @ascent/api dev",
+    "dev:mobile": "pnpm --filter @ascent/mobile dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  }
+}

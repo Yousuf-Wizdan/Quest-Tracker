@@ -1,0 +1,25 @@
+{
+  "name": "@ascent/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@ascent/types": "workspace:*",
+    "@hono/node-server": "^1.14.0",
+    "@neondatabase/serverless": "^1.0.0",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.9.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
