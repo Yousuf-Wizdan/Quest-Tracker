@@ -25,7 +25,7 @@ Copy `.env.example` to `apps/api/.env` and fill in `DATABASE_URL` (Neon Postgres
 
 ### Mobile env
 
-Copy `.env.example` to `apps/mobile/.env` and set `EXPO_PUBLIC_API_URL`. Defaults to `http://localhost:3000`.
+Copy `apps/mobile/.env.example` to `apps/mobile/.env` and set `EXPO_PUBLIC_API_URL`. Defaults to `http://localhost:3000`.
 
 ## Dev commands
 

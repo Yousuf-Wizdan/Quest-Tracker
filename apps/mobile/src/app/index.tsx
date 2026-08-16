@@ -33,7 +33,18 @@ export default function HomeScreen() {
     check();
   }, [check]);
 
-  const isOnline = state.kind === "online";
+  const status = (() => {
+    switch (state.kind) {
+      case "checking":
+        return { label: "checking", online: false };
+      case "online":
+        return { label: "online", online: true };
+      case "offline":
+        return { label: "offline", online: false };
+      case "error":
+        return { label: "unreachable", online: false };
+    }
+  })();
 
   return (
     <View style={styles.root}>
@@ -44,8 +55,8 @@ export default function HomeScreen() {
         <View style={styles.panel}>
           <View style={styles.row}>
             <Text style={styles.label}>SYSTEM</Text>
-            <View style={[styles.dot, isOnline ? styles.dotOnline : styles.dotOffline]} />
-            <Text style={styles.status}>{isOnline ? "online" : "offline"}</Text>
+            <View style={[styles.dot, status.online ? styles.dotOnline : styles.dotOffline]} />
+            <Text style={styles.status}>{status.label}</Text>
           </View>
 
           {state.kind === "online" && (
