@@ -13,6 +13,7 @@ const TODAY = "2026-08-16";
 
 function quest(overrides: Partial<PlannerQuestInput> & { id: string }): PlannerQuestInput {
   return {
+    title: overrides.id,
     goalPriority: 5,
     importance: 10,
     planOrder: 0,

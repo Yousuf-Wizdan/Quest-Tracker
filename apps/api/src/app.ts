@@ -3,12 +3,14 @@ import type { HealthResponse } from "@ascent/types";
 import type { createRepositories } from "./repositories";
 import { createAuthRoutes } from "./auth-routes";
 import { createGoalRoutes } from "./goal-routes";
+import { createDailyPlanRoutes } from "./daily-plan-routes";
 import { seedDemoAccount } from "./seed";
 
 export interface AppDeps {
   checkDatabase: () => Promise<boolean>;
   repos: ReturnType<typeof createRepositories>;
   jwtSecret: string;
+  llmTransport?: import("./llm/types").LlmTransport | null;
 }
 
 export function createApp(deps: AppDeps) {
@@ -34,6 +36,7 @@ export function createApp(deps: AppDeps) {
 
   app.route("/auth", authRoutes);
   app.route("/goals", createGoalRoutes(deps.repos));
+  app.route("/daily-plan", createDailyPlanRoutes({ repos: deps.repos, llmTransport: deps.llmTransport ?? null }));
 
   app.post("/seed-demo", async (c) => {
     await seedDemoAccount(deps.repos);

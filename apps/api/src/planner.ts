@@ -8,6 +8,7 @@ export interface ImpactInput {
 
 export interface PlannerQuestInput extends ImpactInput {
   id: string;
+  title: string;
   planOrder: number;
   estimateMinutes: number;
   cognitiveLoad: CognitiveLoad;
@@ -17,6 +18,7 @@ export interface PlannerQuestInput extends ImpactInput {
 
 export interface DailyQuest {
   id: string;
+  title: string;
   planOrder: number;
   estimateMinutes: number;
   cognitiveLoad: CognitiveLoad;
@@ -115,6 +117,7 @@ export function generateDailyPlan(
   for (const quest of ranked) {
     const dailyQuest: DailyQuest = {
       id: quest.id,
+      title: quest.title,
       planOrder: quest.planOrder,
       estimateMinutes: quest.estimateMinutes,
       cognitiveLoad: quest.cognitiveLoad,
