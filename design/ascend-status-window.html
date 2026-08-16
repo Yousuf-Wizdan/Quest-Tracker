@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASCENT — Status Window · Daily Quest OS</title>
+<style>
+  /* ============ TOKENS — dark spider system ============ */
+  :root{
+    --bg:oklch(.125 .02 258);
+    --surface:oklch(.16 .028 258);
+    --surface-2:oklch(.195 .034 258);
+    --stroke:rgba(255,255,255,.08);
+    --stroke-2:rgba(255,255,255,.16);
+    --ink:oklch(.95 .012 260);
+    --muted:oklch(.72 .03 260);
+    --faint:oklch(.56 .025 260);
+    --red:oklch(.585 .235 25);
+    --red-hover:oklch(.66 .225 25);
+    --red-bright:oklch(.80 .17 25);
+    --red-deep:oklch(.46 .16 25);
+    --red-tint:oklch(.585 .235 25 / .13);
+    --blue:oklch(.62 .16 250);
+    --blue-bright:oklch(.82 .12 250);
+    --blue-tint:oklch(.62 .16 250 / .12);
+    --disp:"Space Grotesk",system-ui,sans-serif;
+    --serif:"Newsreader",Georgia,serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg)}
+  body{font-family:var(--disp);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  /* ============ STAGE ============ */
+  .stage{
+    min-height:100vh;padding:52px 28px 72px;
+    display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;
+    background:
+      radial-gradient(900px 420px at 50% -160px, rgba(244,66,62,.10), transparent 62%),
+      radial-gradient(700px 360px at 8% 108%, rgba(70,120,255,.06), transparent 60%),
+      var(--bg);
+  }
+  .stage::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      repeating-radial-gradient(ellipse 780px 340px at 50% -150px, transparent 0 44px, rgba(244,66,62,.055) 44px 45px, transparent 45px 88px),
+      repeating-conic-gradient(from 0deg at 50% -150px, rgba(244,66,62,.045) 0deg .8deg, transparent .8deg 15deg);
+    -webkit-mask-image:radial-gradient(880px 480px at 50% 0%,#000 8%,transparent 74%);
+            mask-image:radial-gradient(880px 480px at 50% 0%,#000 8%,transparent 74%);
+  }
+  .stage > *{position:relative}
+
+  .caption{
+    width:min(1180px,100%);
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--faint);padding-bottom:18px;border-bottom:1px solid var(--stroke);margin-bottom:44px;
+  }
+  .caption b{color:var(--red-bright);font-weight:600}
+
+  .row{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;
+    width:min(1180px,100%);align-items:start;justify-items:center;
+  }
+
+  /* ============ PHONE FRAME ============ */
+  .phone{width:360px;flex:none;position:relative}
+  .phone .screen{
+    position:relative;width:100%;height:780px;
+    background:linear-gradient(180deg,oklch(.155 .026 258),var(--bg) 100%);
+    border-radius:44px;border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 34px 70px -22px rgba(0,0,0,.72), inset 0 0 0 1px rgba(255,255,255,.03);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  .bezel-glow{position:absolute;inset:-1px;border-radius:44px;pointer-events:none;
+    background:radial-gradient(600px 200px at 50% -10%, rgba(244,66,62,.10), transparent 55%);}
+
+  .island{
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    width:116px;height:34px;border-radius:20px;background:#050507;z-index:20;
+  }
+  .island::after{content:"";position:absolute;right:9px;top:50%;transform:translateY(-50%);
+    width:9px;height:9px;border-radius:50%;background:#0c0c11;border:1px solid #181820;}
+
+  .statusbar{
+    position:relative;z-index:15;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 26px 4px;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink);
+  }
+  .statusbar .s-icons{display:flex;gap:5px;align-items:center}
+
+  .tabbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:15;
+    background:linear-gradient(180deg,oklch(.125 .02 258 / 0),oklch(.125 .02 258 / .97) 26%);
+    padding:10px 18px 22px;display:flex;justify-content:space-between;align-items:flex-end;
+  }
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+    color:var(--faint);font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+    transition:color .15s ease;}
+  .tab svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .tab.active{color:var(--red-bright)}
+  .tab.active svg{stroke-width:2}
+  .tab:hover{color:var(--muted)}
+  .tab:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+  .tab.plus{color:var(--ink)}
+  .tab.plus .plus-core{
+    width:42px;height:42px;border-radius:14px;
+    background:linear-gradient(180deg,oklch(.66 .225 25),var(--red));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--disp);font-weight:700;font-size:22px;line-height:1;color:#fff;
+    box-shadow:0 10px 22px -8px rgba(244,66,62,.55), inset 0 1px 0 rgba(255,255,255,.2);
+    margin-top:-18px;transition:transform .15s ease,filter .15s ease;
+  }
+  .tab.plus:hover .plus-core{filter:brightness(1.08);transform:translateY(-2px)}
+  .tab.plus:active .plus-core{transform:scale(.96)}
+  .tab.plus:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:14px}
+
+  .screen-body{flex:1;overflow:hidden;position:relative}
+
+  .scroll{
+    position:absolute;inset:0;overflow-y:auto;padding:18px 20px 122px;scrollbar-width:none;
+  }
+  .scroll::-webkit-scrollbar{display:none}
+
+  /* ============ SHARED ============ */
+  .eyebrow{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--faint);
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--stroke-2);border-radius:20px;padding:4px 10px;white-space:nowrap;
+  }
+  .chip b{color:var(--red-bright);font-weight:600}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    border:none;cursor:pointer;border-radius:16px;
+    font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.02em;
+    transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+  }
+  .btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{
+    background:linear-gradient(180deg,oklch(.66 .225 25),var(--red));color:#fff;
+    box-shadow:0 12px 26px -12px rgba(244,66,62,.65), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--stroke-2)}
+  .btn-ghost:hover{background:rgba(255,255,255,.05)}
+
+  /* ============ FRAME 1 : COVER ============ */
+  .cover{position:relative;height:100%;display:flex;flex-direction:column;padding:18px 20px 20px}
+  .cover::before{
+    content:"";position:absolute;top:0;left:0;right:0;bottom:120px;pointer-events:none;
+    background:
+      repeating-radial-gradient(ellipse 360px 240px at 80% -70px, transparent 0 38px, rgba(90,150,255,.06) 38px 39px, transparent 39px 76px),
+      repeating-conic-gradient(from 0deg at 80% -70px, rgba(90,150,255,.05) 0 .8deg, transparent .8deg 18deg);
+    -webkit-mask-image:radial-gradient(420px 320px at 80% 0%,#000 8%,transparent 72%);
+            mask-image:radial-gradient(420px 320px at 80% 0%,#000 8%,transparent 72%);
+  }
+  .cover-mark{
+    position:relative;display:flex;align-items:center;justify-content:space-between;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);
+  }
+  .cover-mark .dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 12px var(--red)}
+
+  .cover-hero{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:8px}
+  .cover h1{
+    font-family:var(--serif);font-weight:300;
+    font-size:38px;line-height:1.06;letter-spacing:-.02em;color:var(--ink);
+    margin:18px 0 15px;
+  }
+  .cover h1 em{font-style:italic;color:var(--red-bright)}
+  .cover .lede{
+    font-family:var(--serif);font-size:14px;line-height:1.58;color:var(--muted);
+    max-width:27ch;margin-bottom:22px;
+  }
+  .cover .tip{
+    font-family:var(--mono);font-size:9px;line-height:1.8;letter-spacing:.05em;color:var(--faint);
+    border-left:2px solid var(--stroke-2);padding-left:12px;
+  }
+
+  .cover-window{
+    position:relative;margin:22px 0 20px;border:1px solid var(--stroke-2);border-radius:20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));
+    padding:18px;overflow:hidden;
+  }
+  .cover-window::before{content:"";position:absolute;top:-46px;right:-46px;width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle,rgba(244,66,62,.16),transparent 70%);}
+  .win-head{display:flex;align-items:center;justify-content:space-between;position:relative;
+    font-family:var(--mono);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-bottom:13px;}
+  .win-head .online{display:inline-flex;align-items:center;gap:6px;color:var(--red-bright)}
+  .win-head .online i{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+  .win-lv{position:relative;font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:.02em;margin-bottom:7px}
+  .win-lv span{color:var(--red-bright)}
+  .win-xp{position:relative;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:11px}
+  .win-xp b{color:var(--ink);font-weight:600}
+  .win-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:15px}
+  .win-bar i{display:block;height:100%;width:84%;border-radius:4px;
+    background:linear-gradient(90deg,var(--red-deep),var(--red-bright));box-shadow:0 0 14px rgba(244,66,62,.5);}
+  .win-attrs{position:relative;display:flex;justify-content:space-between}
+  .win-attr{font-family:var(--mono);font-size:8px;letter-spacing:.06em}
+  .win-attr b{display:block;font-size:11px;font-weight:600;color:var(--ink);margin-bottom:2px}
+  .win-attr small{color:var(--faint);font-size:7px;letter-spacing:.12em}
+
+  .cover-teaser{
+    position:relative;border-top:1px solid var(--stroke);padding-top:14px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .teaser-copy{min-width:0}
+  .teaser-copy .eyebrow{margin-bottom:3px}
+  .teaser-copy .t-title{font-family:var(--serif);font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .teaser-copy .t-meta{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-top:2px}
+  .teaser-arrow{flex:none;width:34px;height:34px;border-radius:11px;border:1px solid var(--stroke-2);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);
+    transition:color .15s ease,border-color .15s ease}
+  .teaser-arrow svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+  @keyframes pulse{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+  .teaser-arrow{animation:pulse 1.6s ease-in-out infinite}
+
+  /* ============ FRAME 2 : TODAY ============ */
+  .greet{display:flex;align-items:center;justify-content:space-between;margin:8px 0 16px}
+  .greet h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+  .greet h2 small{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:12px;color:var(--muted);margin-top:2px}
+  .bell{position:relative;width:40px;height:40px;border-radius:13px;border:1px solid var(--stroke-2);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:color .15s ease,border-color .15s ease}
+  .bell:hover{color:var(--ink);border-color:var(--stroke-2)}
+  .bell:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .bell svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .bell .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+  @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(9deg)}40%{transform:rotate(-7deg)}60%{transform:rotate(5deg)}80%{transform:rotate(-3deg)}}
+  .bell svg{animation:ring 2.6s ease-in-out infinite;transform-origin:50% 20%}
+
+  .ribbon{
+    position:relative;border:1px solid var(--stroke-2);border-radius:20px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(244,66,62,.07),var(--surface) 70%);
+    padding:17px 18px;
+  }
+  .ribbon::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(230px 90px at 92% -28%,rgba(244,66,62,.18),transparent 60%);}
+  .ribbon-top{display:flex;align-items:baseline;justify-content:space-between;position:relative;margin-bottom:13px}
+  .ribbon-lv{display:flex;align-items:baseline;gap:10px}
+  .ribbon-lv .lv-tag{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.02em;color:var(--red-bright);
+    text-shadow:0 0 18px rgba(244,66,62,.45)}
+  .ribbon-lv .lv-name{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .ribbon-next{font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.05em}
+  .ribbon-next b{color:var(--red-bright);font-weight:600}
+  .ribbon-xp{display:flex;align-items:baseline;justify-content:space-between;position:relative;margin-bottom:11px}
+  .ribbon-xp b{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .ribbon-xp b span{color:var(--muted);font-size:12px;font-weight:500}
+  .ribbon-xp small{font-family:var(--mono);font-size:8.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+  .xp-bar{height:8px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+  .xp-bar i{display:block;height:100%;width:84%;border-radius:6px;
+    background:linear-gradient(90deg,var(--red-deep),var(--red-bright));
+    box-shadow:0 0 16px rgba(244,66,62,.5);animation:fill 1.2s cubic-bezier(.2,0,0,1) both}
+  @keyframes fill{from{width:0}to{width:84%}}
+  .ribbon-sub{
+    font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.06em;
+    display:flex;justify-content:space-between;margin:7px 2px 0;
+  }
+  .ribbon-sub b{color:var(--red-bright);font-weight:600}
+
+  .focus-card{
+    border:1px solid var(--stroke-2);border-radius:20px;overflow:hidden;
+    margin:16px 0 2px;position:relative;
+    background:linear-gradient(165deg,rgba(244,66,62,.10),var(--surface) 55%);
+  }
+  .focus-card::before{content:"";position:absolute;top:-46px;right:-46px;width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle,rgba(244,66,62,.20),transparent 68%);}
+  .focus-inner{position:relative;padding:18px}
+  .focus-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .focus-head .f-label{font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--red-bright)}
+  .focus-title{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;gap:12px}
+  .focus-title h3{font-family:var(--serif);font-size:22px;font-weight:500;line-height:1.12;letter-spacing:-.01em}
+  .focus-timer{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--ink);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .focus-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:11px}
+  .focus-bar i{display:block;height:100%;width:72%;border-radius:4px;
+    background:linear-gradient(90deg,var(--red-deep),var(--red-bright));box-shadow:0 0 10px rgba(244,66,62,.5)}
+  .focus-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+    font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.06em}
+  .focus-meta .xp-reward{color:var(--red-bright);font-weight:600}
+  .focus-cta{
+    width:100%;height:48px;border:none;border-radius:15px;
+    background:linear-gradient(180deg,oklch(.66 .225 25),var(--red));color:#fff;
+    font-family:var(--disp);font-weight:700;font-size:14.5px;letter-spacing:.05em;
+    display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+    box-shadow:0 12px 24px -12px rgba(244,66,62,.6), inset 0 1px 0 rgba(255,255,255,.18);
+    transition:filter .15s ease,transform .15s ease;
+  }
+  .focus-cta:hover{filter:brightness(1.08)}
+  .focus-cta:active{transform:scale(.98)}
+  .focus-cta:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .why{margin:14px 1px 0;display:flex;gap:10px;align-items:flex-start}
+  .why .why-ico{flex:none;width:28px;height:28px;border-radius:9px;background:var(--red-tint);
+    border:1px solid rgba(244,66,62,.3);display:flex;align-items:center;justify-content:center;color:var(--red-bright)}
+  .why .why-ico svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+  .why small{display:block;font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--red-bright);margin-bottom:2px}
+  .why p{font-family:var(--serif);font-size:12px;line-height:1.45;color:var(--muted)}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:20px 1px 12px}
+  .section-head h4{font-size:14px;font-weight:700;letter-spacing:.01em}
+  .section-head span{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+
+  .quest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{
+    display:flex;align-items:center;gap:12px;
+    border:1px solid var(--stroke);border-radius:16px;padding:13px 12px;
+    background:var(--surface-2);cursor:pointer;text-align:left;min-width:0;
+    transition:transform .15s ease,border-color .15s ease,background-color .15s ease;
+  }
+  .tile:hover{transform:translateY(-2px);border-color:var(--stroke-2);background:oklch(.215 .036 258)}
+  .tile:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .tile-glyph{flex:none;width:36px;height:36px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;color:var(--muted);
+    background:rgba(255,255,255,.045);border:1px solid var(--stroke);transition:background-color .15s ease,color .15s ease,border-color .15s ease}
+  .tile-glyph svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7}
+  .tile-must{background:linear-gradient(160deg,var(--red-tint),var(--surface-2) 55%);border-color:rgba(244,66,62,.22)}
+  .tile-must .tile-glyph{color:var(--red-bright);border-color:rgba(244,66,62,.3);background:rgba(244,66,62,.08)}
+  .tile-should .tile-glyph{color:var(--blue-bright);border-color:rgba(90,150,255,.3);background:rgba(90,150,255,.06)}
+  .tile-opt .tile-glyph{color:var(--faint)}
+  .tile-body{flex:1;min-width:0}
+  .tile-body h5{font-size:13px;font-weight:600;letter-spacing:-.01em;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile-must .tile-body h5{color:#fff}
+  .tile-body .t-meta{font-family:var(--mono);font-size:8px;color:var(--faint);margin-top:3px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .t-meta b{color:var(--muted);font-weight:600}
+  .tile-must .t-meta b{color:var(--red-bright)}
+  .tile-xp{flex:none;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.02em}
+  .tile-must .tile-xp{color:var(--red-bright)}
+  .tile-should .tile-xp{color:var(--blue-bright)}
+  .tile-opt .tile-xp{color:var(--faint)}
+  .tile.done .tile-glyph{background:var(--red);border-color:var(--red);color:#fff}
+  .tile.done .tile-body h5{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3)}
+  .tile.done .tile-body .t-meta{color:var(--faint)}
+
+  .replan{display:none}
+  .replan.on{display:block}
+  .replan-banner{
+    margin:16px 0 4px;border:1px dashed rgba(244,66,62,.5);border-radius:16px;padding:14px 15px;
+    background:rgba(244,66,62,.05);
+  }
+  .replan-banner .eyebrow{color:var(--red-bright);margin-bottom:5px}
+  .replan-banner p{font-family:var(--serif);font-size:12px;line-height:1.5;color:var(--ink);margin-bottom:10px}
+  .replan-actions{display:flex;gap:7px;flex-wrap:wrap}
+  .replan-tag{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--stroke);border-radius:8px;padding:4px 8px;color:var(--muted)}
+  .replan-tag b{color:var(--ink);font-weight:600}
+  .replan-tag.keep b{color:var(--red-bright)}
+
+  /* ============ FRAME 3 : QUEST DETAIL ============ */
+  .detail{display:flex;flex-direction:column;height:100%}
+  .detail-head{display:flex;align-items:center;gap:13px;padding:16px 20px 14px}
+  .back{width:40px;height:40px;border-radius:13px;border:1px solid var(--stroke-2);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;
+    transition:color .15s ease,background-color .15s ease}
+  .back:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+  .back:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+  .detail-head h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .detail-head .chip{margin-left:auto}
+
+  .detail-scroll{flex:1;overflow-y:auto;padding:0 20px 136px;scrollbar-width:none}
+  .detail-scroll::-webkit-scrollbar{display:none}
+
+  .dhero{
+    position:relative;border-radius:24px;overflow:hidden;
+    background:linear-gradient(165deg,rgba(90,150,255,.12),var(--surface) 55%);
+    border:1px solid rgba(90,150,255,.22);padding:26px 20px 22px;margin-bottom:18px;
+  }
+  .dhero::before{content:"";position:absolute;top:-42px;right:-42px;width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(90,150,255,.20),transparent 68%);}
+  .dhero .d-cat{position:relative;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-bright);margin-bottom:12px}
+  .dhero h3{position:relative;font-family:var(--serif);font-size:30px;font-weight:500;line-height:1.08;letter-spacing:-.01em;margin-bottom:12px}
+  .dhero .d-narrative{position:relative;font-family:var(--serif);font-size:12.5px;line-height:1.6;color:var(--muted);max-width:31ch;margin-bottom:19px}
+  .dhero .d-meta{position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .d-stamp{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:#fff;background:linear-gradient(180deg,oklch(.66 .225 25),var(--red));border-radius:11px;padding:8px 13px;
+    box-shadow:0 10px 20px -8px rgba(244,66,62,.6), inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .d-stamp svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+  .d-tags{display:flex;gap:7px}
+  .d-tag{font-family:var(--mono);font-size:8.5px;color:var(--muted);border:1px solid var(--stroke);border-radius:9px;padding:4px 9px}
+
+  .steps-head{display:flex;align-items:baseline;justify-content:space-between;margin:2px 1px 11px}
+  .steps-head h4{font-size:14px;font-weight:700}
+  .steps-head span{font-family:var(--mono);font-size:8.5px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+  .steps{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+  .step{
+    display:flex;gap:12px;align-items:flex-start;
+    border:1px solid var(--stroke);border-radius:16px;padding:13px 14px;
+    background:var(--surface-2);cursor:pointer;transition:border-color .15s ease,background-color .15s ease;
+  }
+  .step:hover{border-color:var(--stroke-2);background:oklch(.215 .036 258)}
+  .step:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .step-check{
+    flex:none;width:22px;height:22px;border-radius:50%;margin-top:1px;
+    border:2px solid var(--faint);position:relative;transition:border-color .15s ease,background-color .15s ease;
+  }
+  .step.done .step-check{border-color:var(--red);background:var(--red)}
+  .step.done .step-check::after{content:"";position:absolute;top:5px;left:4px;width:11px;height:6px;
+    border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg)}
+  .step-body{flex:1;min-width:0}
+  .step-body h5{font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+  .step-body .s-meta{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
+  .step.done .step-body h5{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3)}
+  .step-xp{flex:none;font-family:var(--mono);font-size:9px;font-weight:600;color:var(--red-bright);
+    background:var(--red-tint);border:1px solid rgba(244,66,62,.3);border-radius:8px;padding:3px 7px;align-self:center}
+
+  .insight{
+    display:flex;gap:10px;align-items:flex-start;
+    border:1px solid var(--stroke);border-radius:16px;padding:14px;
+    background:rgba(255,255,255,.015);margin-bottom:16px;
+  }
+  .insight .why-ico{flex:none;width:28px;height:28px;border-radius:9px;background:var(--red-tint);
+    border:1px solid rgba(244,66,62,.3);display:flex;align-items:center;justify-content:center;color:var(--red-bright)}
+  .insight .why-ico svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+  .insight small{display:block;font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--red-bright);margin-bottom:3px}
+  .insight p{font-family:var(--serif);font-size:12px;line-height:1.5;color:var(--muted)}
+
+  .detail-cta{
+    position:absolute;left:0;right:0;bottom:70px;z-index:15;
+    padding:14px 20px 8px;
+    background:linear-gradient(180deg,oklch(.125 .02 258 / 0),oklch(.125 .02 258 / .96) 38%);
+  }
+  .detail-cta .btn{width:100%;height:54px;border-radius:18px;font-size:16px;letter-spacing:.05em}
+  .detail-cta .btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:1120px){
+    .row{grid-template-columns:1fr;gap:56px}
+    .phone{width:360px}
+    .phone .screen{height:780px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="stage" data-od-id="stage">
+
+  <header class="caption">
+    <span>Hi-Fi Prototype · iPhone</span>
+    <span>ASCENT <b>//</b> System v2.7</span>
+  </header>
+
+  <div class="row">
+
+    <!-- ============ FRAME 1 : COVER ============ -->
+    <section class="phone" data-od-id="phone-cover" aria-label="Cover poster">
+      <div class="screen">
+        <div class="bezel-glow"></div>
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="s-icons">
+            <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.2" y="3.5" width="3" height="7.5" rx="1"/><rect x="8.4" y="1" width="3" height="10" rx="1"/><path d="M12.8 4.5c.7.7 1.1 1.7 1.1 2.7s-.4 2-1.1 2.7" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><path d="M16.2 5.4c-.9 1.6-2.4 2.9-4.2 3.6v-1.2c1.5-.6 2.7-1.7 3.4-3.2.3-.6 1.3-.6 1.6 0l-.8.8z" opacity=".5"/><rect x="0" y="0" width="18" height="11" rx="3.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="1.5" width="12" height="8" rx="2" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="screen-body">
+          <div class="cover">
+            <div class="cover-mark">
+              <span class="dot"></span><span>Status Window</span><span>v2.7.0</span>
+            </div>
+
+            <div class="cover-hero">
+              <div class="eyebrow">Daily Quest OS · Personal System</div>
+              <h1>Daily quests for <em>becoming</em> a better human.</h1>
+              <p class="lede">The system does the planning. You do the work. Wake up to a status window that already knows what matters today.</p>
+              <p class="tip">TAP quests to open detail · Toggle [SYSTEM] in the toolbar to switch theme &amp; layout</p>
+            </div>
+
+            <div class="cover-window">
+              <div class="win-head"><span>System</span><span class="online"><i></i>online</span></div>
+              <div class="win-lv">LV <span>27</span></div>
+              <div class="win-xp"><b>8,420</b> / 10,000 XP</div>
+              <div class="win-bar"><i></i></div>
+              <div class="win-attrs">
+                <div class="win-attr"><b>72</b><small>STR</small></div>
+                <div class="win-attr"><b>84</b><small>INT</small></div>
+                <div class="win-attr"><b>68</b><small>VIT</small></div>
+                <div class="win-attr"><b>76</b><small>FOC</small></div>
+                <div class="win-attr"><b>61</b><small>DIS</small></div>
+                <div class="win-attr"><b>73</b><small>CON</small></div>
+              </div>
+            </div>
+
+            <div class="cover-teaser">
+              <div class="teaser-copy">
+                <div class="eyebrow">Next — Today's Quests</div>
+                <div class="t-title">LV 27 · 8,420 / 10,000 XP</div>
+                <div class="t-meta">8 quests · 430 XP today</div>
+              </div>
+              <div class="teaser-arrow">
+                <svg viewBox="0 0 24 24"><path d="M12 4v14M6 12l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FRAME 2 : TODAY ============ -->
+    <section class="phone" data-od-id="phone-today" aria-label="Today's quests dashboard">
+      <div class="screen">
+        <div class="bezel-glow"></div>
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="s-icons">
+            <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.2" y="3.5" width="3" height="7.5" rx="1"/><rect x="8.4" y="1" width="3" height="10" rx="1"/><path d="M12.8 4.5c.7.7 1.1 1.7 1.1 2.7s-.4 2-1.1 2.7" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><path d="M16.2 5.4c-.9 1.6-2.4 2.9-4.2 3.6v-1.2c1.5-.6 2.7-1.7 3.4-3.2.3-.6 1.3-.6 1.6 0l-.8.8z" opacity=".5"/><rect x="0" y="0" width="18" height="11" rx="3.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="1.5" width="12" height="8" rx="2" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="screen-body">
+          <div class="scroll">
+
+            <div class="greet">
+              <h2>Good morning, Yousuf
+                <small>Mon · Aug 16 · Day 214</small>
+              </h2>
+              <button class="bell" aria-label="Notifications">
+                <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+                <span class="dot"></span>
+              </button>
+            </div>
+
+            <div class="ribbon" data-od-id="level-ribbon">
+              <div class="ribbon-top">
+                <span class="ribbon-lv"><span class="lv-tag">LV 27</span><span class="lv-name">Focused Operator</span></span>
+                <span class="ribbon-next">LV 28 · <b>62%</b></span>
+              </div>
+              <div class="ribbon-xp"><b>8,420 <span>/ 10,000 XP</span></b><small>Daily Quest OS</small></div>
+              <div class="xp-bar"><i></i></div>
+            </div>
+
+            <div class="ribbon-sub">
+              <span>8 quests waiting</span><span><b>+430 XP</b> today</span>
+            </div>
+
+            <div class="focus-card" data-od-id="current-focus">
+              <div class="focus-inner">
+                <div class="focus-head">
+                  <span class="f-label">Current Focus</span>
+                  <span class="chip">Reward <b>+180 XP</b></span>
+                </div>
+                <div class="focus-title">
+                  <h3>Build authentication system</h3>
+                  <span class="focus-timer">01:27:34</span>
+                </div>
+                <div class="focus-bar"><i></i></div>
+                <div class="focus-meta"><span>72% complete</span><span class="xp-reward">+180 XP on complete</span></div>
+                <button class="focus-cta" data-od-id="continue-cta">CONTINUE</button>
+                <div class="why">
+                  <span class="why-ico"><svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.4"/></svg></span>
+                  <div><small>Why this?</small><p>Highest-impact task for your current goal — interview prep.</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-head">
+              <h4>Today's Quests</h4>
+              <span>Must → Should → Optional</span>
+            </div>
+
+            <div class="quest-grid">
+              <button class="tile tile-must done" data-od-id="quest-card-deepwork">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/><path d="M18.5 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg></span>
+                <span class="tile-body"><h5>Deep work — sprint focus</h5><span class="t-meta"><b>MUST</b> · 90 min · done</span></span>
+                <span class="tile-xp">+45</span>
+              </button>
+              <button class="tile tile-should" data-od-id="quest-card-dsa">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><path d="M7 6l5 5 5-5M7 18l5-5 5 5"/></svg></span>
+                <span class="tile-body"><h5>DSA — graph problems</h5><span class="t-meta"><b>SHOULD</b> · 60 min · 0/3</span></span>
+                <span class="tile-xp">+40</span>
+              </button>
+              <button class="tile tile-should" data-od-id="quest-card-project">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/><path d="M9 8v8M15 8v8M9 12h6"/></svg></span>
+                <span class="tile-body"><h5>Project — auth UI polish</h5><span class="t-meta"><b>SHOULD</b> · 45 min · 2h behind</span></span>
+                <span class="tile-xp">+35</span>
+              </button>
+              <button class="tile tile-should" data-od-id="quest-card-workout">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3M8.5 8.5l2 2M13.5 13.5l2 2"/></svg></span>
+                <span class="tile-body"><h5>Exercise — VIT +3</h5><span class="t-meta"><b>SHOULD</b> · 60 min · body</span></span>
+                <span class="tile-xp">+30</span>
+              </button>
+              <button class="tile tile-opt" data-od-id="quest-card-reading">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><path d="M4 5h6a3 3 0 0 1 2 .8 3 3 0 0 1 2-.8h6v13h-6a3 3 0 0 0-2 .8 3 3 0 0 0-2-.8H4z"/></svg></span>
+                <span class="tile-body"><h5>Reading — Four Thousand Weeks</h5><span class="t-meta">OPTIONAL · 30 min · ch.6</span></span>
+                <span class="tile-xp">+20</span>
+              </button>
+              <button class="tile tile-opt" data-od-id="quest-card-meditate">
+                <span class="tile-glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3"/><path d="M6 17c0-3 2.7-5 6-5s6 2 6 5M4 20h16"/></svg></span>
+                <span class="tile-body"><h5>Mind — 10-min meditation</h5><span class="t-meta">OPTIONAL · 10 min · wind-down</span></span>
+                <span class="tile-xp">+15</span>
+              </button>
+            </div>
+
+            <div class="replan" id="replan-banner" data-od-id="replan-banner">
+              <div class="replan-banner">
+                <div class="eyebrow">System · Adaptive Replan</div>
+                <p>You are <b>1h 42m</b> behind today's original schedule. Replanning your remaining tasks.</p>
+                <div class="replan-actions">
+                  <span class="replan-tag keep"><b>KEEP</b> Project</span>
+                  <span class="replan-tag"><b>SHORTEN</b> DSA → 45m</span>
+                  <span class="replan-tag"><b>MOVE</b> Reading → tmrw</span>
+                  <span class="replan-tag" style="border-style:dashed"><b>SKIP</b> Optional</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="tabbar" data-od-id="tabbar">
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-6 8 6v10a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg><span>Status</span></div>
+          <div class="tab active"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5" opacity=".5"/></svg><span>Today</span></div>
+          <div class="tab plus" role="button" tabindex="0" aria-label="Quick capture"><span class="plus-core">+</span><span>Capture</span></div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span>Progress</span></div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.7l-5.2 2.4 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Goals</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FRAME 3 : QUEST DETAIL ============ -->
+    <section class="phone" data-od-id="phone-quest" aria-label="Quest detail">
+      <div class="screen">
+        <div class="bezel-glow"></div>
+        <div class="island"></div>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="s-icons">
+            <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.2" y="3.5" width="3" height="7.5" rx="1"/><rect x="8.4" y="1" width="3" height="10" rx="1"/><path d="M12.8 4.5c.7.7 1.1 1.7 1.1 2.7s-.4 2-1.1 2.7" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><path d="M16.2 5.4c-.9 1.6-2.4 2.9-4.2 3.6v-1.2c1.5-.6 2.7-1.7 3.4-3.2.3-.6 1.3-.6 1.6 0l-.8.8z" opacity=".5"/><rect x="0" y="0" width="18" height="11" rx="3.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="1.5" y="1.5" width="12" height="8" rx="2" fill="currentColor"/></svg>
+          </span>
+        </div>
+        <div class="screen-body">
+          <div class="detail">
+            <div class="detail-head">
+              <button class="back" aria-label="Back">
+                <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+              <h2>Quest</h2>
+              <span class="chip">Secondary · <b>Due today</b></span>
+            </div>
+
+            <div class="detail-scroll">
+              <div class="dhero" data-od-id="quest-hero">
+                <div class="d-cat">Secondary Quest · DSA / Career</div>
+                <h3>Graph algorithms</h3>
+                <p class="d-narrative">Three problems on graph traversal, topo sort and shortest path. What the mock rounds keep testing — and the fastest way to raise INT this week.</p>
+                <div class="d-meta">
+                  <span class="d-stamp">
+                    <svg viewBox="0 0 24 24"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg>
+                    Reward +90 XP
+                  </span>
+                  <span class="d-tags"><span class="d-tag">60 min</span><span class="d-tag">INT +2</span></span>
+                </div>
+              </div>
+
+              <div class="steps-head">
+                <h4>Steps</h4>
+                <span>1 of 3 complete</span>
+              </div>
+
+              <div class="steps">
+                <button class="step done" data-od-id="step-1">
+                  <span class="step-check"></span>
+                  <span class="step-body"><h5>Warm-up — adjacency list &amp; BFS on LeetCode 199</h5><span class="s-meta">~20 min · easy</span></span>
+                  <span class="step-xp">+20</span>
+                </button>
+                <button class="step" data-od-id="step-2">
+                  <span class="step-check"></span>
+                  <span class="step-body"><h5>Topological sort — course schedule (LC 207)</h5><span class="s-meta">~20 min · medium</span></span>
+                  <span class="step-xp">+35</span>
+                </button>
+                <button class="step" data-od-id="step-3">
+                  <span class="step-check"></span>
+                  <span class="step-body"><h5>Shortest path — network delay (LC 743)</h5><span class="s-meta">~20 min · medium</span></span>
+                  <span class="step-xp">+35</span>
+                </button>
+              </div>
+
+              <div class="insight">
+                <span class="why-ico"><svg viewBox="0 0 24 24"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
+                <div><small>Why this?</small><p>DSA is your current bottleneck — project progress is healthy, but consistency here is below target. Three problems today keeps the streak alive.</p></div>
+              </div>
+            </div>
+
+            <div class="detail-cta">
+              <button class="btn btn-primary" data-od-id="start-quest-cta">
+                <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>
+                Start quest
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabbar" data-od-id="tabbar-detail">
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-6 8 6v10a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg><span>Status</span></div>
+          <div class="tab active"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5" opacity=".5"/></svg><span>Today</span></div>
+          <div class="tab plus" role="button" tabindex="0" aria-label="Quick capture"><span class="plus-core">+</span><span>Capture</span></div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span>Progress</span></div>
+          <div class="tab"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.7l-5.2 2.4 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Goals</span></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    (function(){
+      var steps = document.querySelectorAll('.step');
+      steps.forEach(function(s){
+        s.addEventListener('click', function(){ s.classList.toggle('done'); });
+      });
+      var tiles = document.querySelectorAll('.tile');
+      tiles.forEach(function(t){
+        t.addEventListener('click', function(){ t.classList.toggle('done'); });
+      });
+      var reset = document.querySelector('.focus-cta');
+      if (reset) reset.addEventListener('click', function(){
+        var banner = document.getElementById('replan-banner');
+        if (banner) banner.classList.add('on');
+      });
+    })();
+  </script>
+</div>
+</body>
+</html>
