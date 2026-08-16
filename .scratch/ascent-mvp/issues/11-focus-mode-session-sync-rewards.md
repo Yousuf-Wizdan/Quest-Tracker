@@ -4,12 +4,12 @@
 
 **Blocked by:** 09 — Today screen + daily plan + Current Focus; 03 — Progression engine
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] Focus Mode shows only the current Quest, timer, progress, and controls
-- [ ] Timer counts up on-device and survives a network drop
-- [ ] Pause, complete, and end-session controls work
-- [ ] Session syncs to the backend on pause, complete, and end
-- [ ] Backend enforces at most one active Focus Session per user
-- [ ] Quest Complete result shows XP and Attribute gains from the progression engine
-- [ ] Partial sessions earn time-proportional XP
+- [x] Focus Mode shows only the current Quest, timer, progress, and controls
+- [x] Timer counts up on-device and survives a network drop
+- [x] Pause, complete, and end-session controls work
+- [x] Session syncs to the backend on pause, complete, and end
+- [x] Backend enforces at most one active Focus Session per user
+- [x] Quest Complete result shows XP and Attribute gains from the progression engine
+- [x] Partial sessions earn time-proportional XP
