@@ -6,6 +6,7 @@ import { createGoalRoutes } from "./goal-routes";
 import { createDailyPlanRoutes } from "./daily-plan-routes";
 import { createQuestRoutes } from "./quest-routes";
 import { createFocusRoutes } from "./focus-routes";
+import { createReplanRoutes } from "./replan-routes";
 import { seedDemoAccount } from "./seed";
 
 export interface AppDeps {
@@ -41,6 +42,7 @@ export function createApp(deps: AppDeps) {
   app.route("/daily-plan", createDailyPlanRoutes({ repos: deps.repos, llmTransport: deps.llmTransport ?? null }));
   app.route("/quests", createQuestRoutes({ repos: deps.repos, llmTransport: deps.llmTransport ?? null }));
   app.route("/focus", createFocusRoutes(deps.repos));
+  app.route("/replan", createReplanRoutes(deps.repos, deps.llmTransport ?? null));
 
   app.post("/seed-demo", async (c) => {
     await seedDemoAccount(deps.repos);

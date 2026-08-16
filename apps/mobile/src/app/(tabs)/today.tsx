@@ -23,6 +23,11 @@ interface DailyPlan {
   why: { source: string; text: string };
 }
 
+interface ReplanResponse {
+  decisions: Array<{ questId: string; outcome: string }>;
+  systemMessage: { text: string; source: string };
+}
+
 const tierColor: Record<Tier, string> = {
   MUST: colors.redBright,
   SHOULD: colors.blueBright,
@@ -31,6 +36,7 @@ const tierColor: Record<Tier, string> = {
 
 export default function TodayScreen() {
   const [plan, setPlan] = useState<DailyPlan | null>(null);
+  const [replan, setReplan] = useState<ReplanResponse | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/daily-plan`)
@@ -38,6 +44,21 @@ export default function TodayScreen() {
       .then((data) => setPlan(data))
       .catch(() => setPlan(null));
   }, []);
+
+  async function triggerReplan() {
+    const res = await fetch(`${API_URL}/replan`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        scheduled: plan?.scheduled ?? [],
+        remainingBudgetMinutes: 100,
+      }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as ReplanResponse;
+      setReplan(data);
+    }
+  }
 
   const focus = plan?.currentFocus?.quest;
 
@@ -66,6 +87,24 @@ export default function TodayScreen() {
           )}
 
           <Text style={styles.sectionLabel}>TODAY'S QUESTS</Text>
+
+          {replan && (
+            <View style={styles.replanBanner}>
+              <Text style={styles.replanLabel}>ADAPTIVE REPLAN</Text>
+              <Text style={styles.replanMessage}>{replan.systemMessage.text}</Text>
+              <View style={styles.replanActions}>
+                {replan.decisions.map((d) => (
+                  <Text key={d.questId} style={styles.replanTag}>
+                    {d.outcome}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <Pressable style={styles.replanButton} onPress={triggerReplan}>
+            <Text style={styles.replanButtonText}>TRIGGER REPLAN</Text>
+          </Pressable>
 
           {plan?.scheduled.map((quest) => (
             <View
@@ -162,4 +201,39 @@ const styles = StyleSheet.create({
   questTitle: { color: colors.ink, fontSize: 14, fontWeight: "600" },
   done: { color: colors.muted, textDecorationLine: "line-through" },
   questMeta: { color: colors.faint, fontSize: 11, fontFamily: "monospace" },
+  replanBanner: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.red,
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: "rgba(244,66,62,0.05)",
+  },
+  replanLabel: { color: colors.redBright, fontSize: 10, letterSpacing: 2, fontFamily: "monospace" },
+  replanMessage: { color: colors.ink, fontSize: 13, lineHeight: 18, marginTop: 6 },
+  replanActions: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
+  replanTag: {
+    color: colors.muted,
+    fontSize: 9,
+    letterSpacing: 1,
+    fontFamily: "monospace",
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: 8,
+    padding: 4,
+    paddingHorizontal: 8,
+  },
+  replanButton: {
+    borderWidth: 1,
+    borderColor: colors.stroke2,
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  replanButtonText: {
+    color: colors.muted,
+    fontSize: 10,
+    letterSpacing: 2,
+    fontFamily: "monospace",
+  },
 });
