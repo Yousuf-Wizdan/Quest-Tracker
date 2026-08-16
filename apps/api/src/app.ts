@@ -38,5 +38,21 @@ export function createApp(deps: AppDeps) {
     return c.json({ ok: true });
   });
 
+  app.get("/profile/demo", async (c) => {
+    const [demo] = await deps.repos.getUserByEmail("demo@ascent.app");
+    if (!demo) {
+      await seedDemoAccount(deps.repos);
+    }
+
+    const [user] = await deps.repos.getUserByEmail("demo@ascent.app");
+    const [profile] = await deps.repos.getProfile(user!.id);
+
+    return c.json({
+      totalXp: profile?.totalXp ?? 0,
+      streak: profile?.streak ?? 0,
+      attributes: JSON.parse(profile?.attributes ?? "{}"),
+    });
+  });
+
   return app;
 }
