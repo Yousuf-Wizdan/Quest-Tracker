@@ -8,6 +8,7 @@ import { createQuestRoutes } from "./quest-routes";
 import { createFocusRoutes } from "./focus-routes";
 import { createReplanRoutes } from "./replan-routes";
 import { createInboxRoutes } from "./inbox-routes";
+import { createProgressRoutes } from "./progress-routes";
 import { seedDemoAccount } from "./seed";
 
 export interface AppDeps {
@@ -45,6 +46,7 @@ export function createApp(deps: AppDeps) {
   app.route("/focus", createFocusRoutes(deps.repos));
   app.route("/replan", createReplanRoutes(deps.repos, deps.llmTransport ?? null));
   app.route("/inbox", createInboxRoutes(deps.repos, deps.llmTransport ?? null));
+  app.route("/progress", createProgressRoutes(deps.repos));
 
   app.post("/seed-demo", async (c) => {
     await seedDemoAccount(deps.repos);
