@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { HealthResponse } from "@ascent/types";
 import type { createRepositories } from "./repositories";
 import { createAuthRoutes } from "./auth-routes";
+import { createGoalRoutes } from "./goal-routes";
 import { seedDemoAccount } from "./seed";
 
 export interface AppDeps {
@@ -32,6 +33,7 @@ export function createApp(deps: AppDeps) {
   });
 
   app.route("/auth", authRoutes);
+  app.route("/goals", createGoalRoutes(deps.repos));
 
   app.post("/seed-demo", async (c) => {
     await seedDemoAccount(deps.repos);

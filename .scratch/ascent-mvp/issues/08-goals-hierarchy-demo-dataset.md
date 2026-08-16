@@ -4,10 +4,10 @@
 
 **Blocked by:** 06 — Auth + demo account; 05 — Database schema + repositories
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] CRUD works for Goals, Areas, Projects, Quests, and Steps through the API
-- [ ] Goals screen shows a Goal, its Areas, and its Projects
-- [ ] Goal progress is visible
-- [ ] Demo account seeds Software Engineering Internship → DSA and Projects → the auth + graph Quests with Steps
-- [ ] Quest estimates, XP rewards, and cognitive-load tags are part of the seed data
+- [x] CRUD works for Goals, Areas, Projects, Quests, and Steps through the API
+- [x] Goals screen shows a Goal, its Areas, and its Projects
+- [x] Goal progress is visible
+- [x] Demo account seeds Software Engineering Internship → DSA and Projects → the auth + graph Quests with Steps
+- [x] Quest estimates, XP rewards, and cognitive-load tags are part of the seed data

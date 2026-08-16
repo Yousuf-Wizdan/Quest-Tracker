@@ -108,11 +108,19 @@ export function createRepositories(db: Db) {
         .returning();
     },
 
+    listAreas(goalId: string) {
+      return db.select().from(schema.areas).where(eq(schema.areas.goalId, goalId));
+    },
+
     createProject(input: ProjectInput) {
       return db
         .insert(schema.projects)
         .values({ id: randomUUID(), areaId: input.areaId, title: input.title })
         .returning();
+    },
+
+    listProjects(areaId: string) {
+      return db.select().from(schema.projects).where(eq(schema.projects.areaId, areaId));
     },
 
     createQuest(input: QuestInput) {
@@ -135,6 +143,10 @@ export function createRepositories(db: Db) {
 
     getQuestById(id: string) {
       return db.select().from(schema.quests).where(eq(schema.quests.id, id)).limit(1);
+    },
+
+    listQuests(projectId: string) {
+      return db.select().from(schema.quests).where(eq(schema.quests.projectId, projectId));
     },
 
     completeQuest(id: string) {
