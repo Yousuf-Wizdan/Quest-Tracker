@@ -4,11 +4,11 @@
 
 **Blocked by:** 08 — Goals hierarchy + demo dataset; 02 — LLM client + fallback
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] Large + button captures Task, Idea, and Note into the Inbox
-- [ ] Goal capture opens the Goals flow
-- [ ] Inbox items display without requiring immediate organization
-- [ ] LLM triages an Inbox item into a Goal/Area/Project/Quest suggestion
-- [ ] User confirms or adjusts the triage before it is filed
-- [ ] Untriaged items remain in the Inbox when the LLM is unavailable
+- [x] Large + button captures Task, Idea, and Note into the Inbox
+- [x] Goal capture opens the Goals flow
+- [x] Inbox items display without requiring immediate organization
+- [x] LLM triages an Inbox item into a Goal/Area/Project/Quest suggestion
+- [x] User confirms or adjusts the triage before it is filed
+- [x] Untriaged items remain in the Inbox when the LLM is unavailable
