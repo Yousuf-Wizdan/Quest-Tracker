@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Pressable,
@@ -33,6 +34,7 @@ export default function LoginScreen() {
       if (res.ok) {
         const auth = (await res.json()) as AuthResponse;
         setMessage(`Signed in as ${auth.user.email}`);
+        router.replace("/(tabs)/status");
       } else {
         const body = (await res.json()) as { error?: string };
         setMessage(body.error ?? "Authentication failed");
