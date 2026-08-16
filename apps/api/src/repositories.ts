@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
-import type { PgliteDatabase } from "drizzle-orm/pglite";
+import type { PgDatabase } from "drizzle-orm/pg-core";
+import type { PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { randomUUID } from "node:crypto";
 import * as schema from "./schema";
 import type { AttributeMap } from "@ascent/types";
 
-export type Db = PgliteDatabase<typeof schema>;
+export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 export interface GoalInput {
   userId: string;
@@ -49,6 +50,44 @@ export function createRepositories(db: Db) {
 
     getUserByEmail(email: string) {
       return db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+    },
+
+    getUserById(id: string) {
+      return db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+    },
+
+    createRefreshToken(token: { id: string; userId: string; tokenHash: string; expiresAt: Date }) {
+      return db.insert(schema.refreshTokens).values(token).returning();
+    },
+
+    createProfile(profile: {
+      userId: string;
+      totalXp: number;
+      streak: number;
+      lastStreakDate: string | null;
+      attributes: string;
+    }) {
+      return db.insert(schema.profiles).values(profile).returning();
+    },
+
+    getProfile(userId: string) {
+      return db.select().from(schema.profiles).where(eq(schema.profiles.userId, userId)).limit(1);
+    },
+
+    getRefreshTokenByHash(tokenHash: string) {
+      return db
+        .select()
+        .from(schema.refreshTokens)
+        .where(eq(schema.refreshTokens.tokenHash, tokenHash))
+        .limit(1);
+    },
+
+    revokeRefreshToken(id: string) {
+      return db
+        .update(schema.refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(eq(schema.refreshTokens.id, id))
+        .returning();
     },
 
     createGoal(input: GoalInput) {

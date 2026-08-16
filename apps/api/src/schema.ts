@@ -23,6 +23,17 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const profiles = pgTable("profiles", {
+  userId: varchar("user_id", { length: 36 })
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  totalXp: integer("total_xp").notNull().default(0),
+  streak: integer("streak").notNull().default(0),
+  lastStreakDate: varchar("last_streak_date", { length: 10 }),
+  attributes: text("attributes").notNull().default("{}"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const refreshTokens = pgTable("refresh_tokens", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
