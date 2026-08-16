@@ -21,7 +21,15 @@ pnpm install
 
 ### API env
 
-Copy `.env.example` to `apps/api/.env` and fill in `DATABASE_URL` (Neon Postgres). The API will report the database as unavailable when it is missing.
+Copy `.env.example` to `apps/api/.env` and fill in `DATABASE_URL` (Neon Postgres), `JWT_SECRET`, and the LLM vars. The API will report the database as unavailable when `DATABASE_URL` is missing.
+
+### Database migrations
+
+```sh
+cd apps/api
+pnpm db:generate   # generate SQL from src/schema.ts into drizzle/
+pnpm db:migrate    # apply pending migrations to DATABASE_URL
+```
 
 ### Mobile env
 

@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@ascent/types": "workspace:*",
@@ -17,7 +19,9 @@
     "hono": "^4.9.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.5",
     "@types/node": "^24.0.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
