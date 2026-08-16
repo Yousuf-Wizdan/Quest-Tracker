@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import type { HealthResponse } from "@ascent/types";
 import type { createRepositories } from "./repositories";
 import { createAuthRoutes } from "./auth-routes";
@@ -15,11 +16,14 @@ export interface AppDeps {
   checkDatabase: () => Promise<boolean>;
   repos: ReturnType<typeof createRepositories>;
   jwtSecret: string;
+  databaseAvailable: boolean;
   llmTransport?: import("./llm/types").LlmTransport | null;
 }
 
 export function createApp(deps: AppDeps) {
   const app = new Hono();
+
+  app.use("*", cors());
 
   app.get("/health", async (c) => {
     const connected = await deps.checkDatabase();
@@ -31,6 +35,13 @@ export function createApp(deps: AppDeps) {
     };
 
     return c.json(body, 200);
+  });
+
+  app.use("*", async (c, next) => {
+    if (!deps.databaseAvailable) {
+      return c.json({ error: "Database not configured — set DATABASE_URL" }, 503);
+    }
+    await next();
   });
 
   const authRoutes = createAuthRoutes(deps.repos, {

@@ -29,6 +29,7 @@ const app = createApp({
     db ?? ({} as ReturnType<typeof drizzle>),
   ),
   jwtSecret,
+  databaseAvailable: db !== null,
 });
 
 const port = Number(process.env.PORT ?? 3000);

@@ -39,6 +39,7 @@ describe("health endpoint", () => {
       checkDatabase: async () => true,
       repos: emptyRepos(),
       jwtSecret: "test-secret-that-is-long-enough-for-hs256-signing",
+      databaseAvailable: true,
     });
 
     const res = await app.request("/health");
@@ -55,6 +56,7 @@ describe("health endpoint", () => {
       checkDatabase: async () => false,
       repos: emptyRepos(),
       jwtSecret: "test-secret-that-is-long-enough-for-hs256-signing",
+      databaseAvailable: true,
     });
 
     const res = await app.request("/health");
