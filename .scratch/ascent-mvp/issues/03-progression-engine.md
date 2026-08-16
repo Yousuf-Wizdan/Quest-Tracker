@@ -4,12 +4,12 @@
 
 **Blocked by:** 01 — Monorepo scaffold + health tracer bullet
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] XP rewards use the design's numbers (e.g. 90-minute deep work = +45 XP)
-- [ ] Level uses a flat 10,000 XP requirement with overflow carried into the next Level
-- [ ] Six Attributes (STR, INT, VIT, FOC, DIS, CON) grow from completed Quests and Focus Sessions
-- [ ] Streak counts consecutive days with at least one MUST-tier Quest completed
-- [ ] Partial Focus Sessions earn time-proportional XP rounded to nearest 5, with a 10-minute minimum
-- [ ] Full Quest reward applies on completion
-- [ ] Tests cover the public progression interface with independent expected values
+- [x] XP rewards use the design's numbers (e.g. 90-minute deep work = +45 XP)
+- [x] Level uses a flat 10,000 XP requirement with overflow carried into the next Level
+- [x] Six Attributes (STR, INT, VIT, FOC, DIS, CON) grow from completed Quests and Focus Sessions
+- [x] Streak counts consecutive days with at least one MUST-tier Quest completed
+- [x] Partial Focus Sessions earn time-proportional XP rounded to nearest 5, with a 10-minute minimum
+- [x] Full Quest reward applies on completion
+- [x] Tests cover the public progression interface with independent expected values
