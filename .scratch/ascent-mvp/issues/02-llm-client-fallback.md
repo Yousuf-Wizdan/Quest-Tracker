@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — Monorepo scaffold + health tracer bullet
 
-**Status:** ready-for-agent
+**Status:** complete
 
-- [ ] Client calls the configured OpenAI-compatible base URL and model
-- [ ] Requests time out and surface a failure signal rather than hanging
-- [ ] "Why this?" and System Message templates render when the LLM fails
-- [ ] Tests use a mocked transport and cover success, timeout, and malformed-response paths
-- [ ] LLM base URL and model string are backend-only env vars
+- [x] Client calls the configured OpenAI-compatible base URL and model
+- [x] Requests time out and surface a failure signal rather than hanging
+- [x] "Why this?" and System Message templates render when the LLM fails
+- [x] Tests use a mocked transport and cover success, timeout, and malformed-response paths
+- [x] LLM base URL and model string are backend-only env vars
