@@ -1,8 +1,11 @@
+import { Text, View } from "@tamagui/core";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { AttributeMap } from "@ascent/types";
-import { colors } from "../../theme";
+import { ScreenBackground } from "../../components/ScreenBackground";
+import { Icon } from "../../components/Icon";
+import { palette } from "../../palette";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -15,6 +18,15 @@ interface ProgressData {
   tasksCompleted: number;
   completionRate: number;
 }
+
+const ATTR_ICONS = {
+  STR: "Dumbbell",
+  INT: "Brain",
+  VIT: "HeartPulse",
+  FOC: "Crosshair",
+  DIS: "Shield",
+  CON: "Flame",
+} as const;
 
 export default function ProgressScreen() {
   const [data, setData] = useState<ProgressData | null>(null);
@@ -38,66 +50,71 @@ export default function ProgressScreen() {
   const d = data ?? fallback;
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe}>
-        <Text style={styles.title}>Progress</Text>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>CHARACTER</Text>
-            <Text style={styles.level}>LV {d.level}</Text>
-            <Text style={styles.xp}>{d.totalXp.toLocaleString()} XP</Text>
-            <Text style={styles.streak}>Streak: {d.streak} days</Text>
+    <ScreenBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+          <Text fontFamily="$display" fontSize="$9" fontWeight="700" color="$ink">
+            Progress
+          </Text>
+
+          <View borderWidth={1} borderColor="$stroke2" borderRadius="$5" padding="$4.5" backgroundColor="$surface">
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={3} textTransform="uppercase" color="$accentBright">
+              CHARACTER
+            </Text>
+            <Text fontFamily="$mono" fontSize={40} fontWeight="700" color="$ink" marginTop="$3">
+              LV {d.level}
+            </Text>
+            <Text fontFamily="$mono" fontSize={14} color="$muted" marginTop="$1">
+              {d.totalXp.toLocaleString()} XP
+            </Text>
+            <View flexDirection="row" alignItems="center" gap="$2" marginTop="$2.5">
+              <Icon name="Flame" size={16} color={palette.redBright} />
+              <Text fontFamily="$mono" fontSize={12} color="$faint">
+                Streak: {d.streak} days
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>ATTRIBUTES</Text>
-            <View style={styles.attrGrid}>
-              {(Object.keys(d.attributes) as Array<keyof AttributeMap>).map((key) => (
-                <View key={key} style={styles.attr}>
-                  <Text style={styles.attrValue}>{d.attributes[key]}</Text>
-                  <Text style={styles.attrLabel}>{key}</Text>
+          <View borderWidth={1} borderColor="$stroke2" borderRadius="$5" padding="$4.5" backgroundColor="$surface">
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={3} textTransform="uppercase" color="$accentBright">
+              ATTRIBUTES
+            </Text>
+            <View flexDirection="row" justifyContent="space-between" flexWrap="wrap" gap="$2" marginTop="$3">
+              {(Object.keys(d.attributes) as (keyof AttributeMap)[]).map((key) => (
+                <View key={key} alignItems="center" minWidth={48}>
+                  <Icon name={ATTR_ICONS[key]} size={20} color={palette.muted} />
+                  <Text fontFamily="$mono" fontSize={22} fontWeight="700" color="$ink" marginTop="$1.5">
+                    {d.attributes[key]}
+                  </Text>
+                  <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$faint">
+                    {key}
+                  </Text>
                 </View>
               ))}
             </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>PERFORMANCE</Text>
-            <Text style={styles.perf}>Focused hours: {d.focusedHours}</Text>
-            <Text style={styles.perf}>Quests completed: {d.tasksCompleted}</Text>
-            <Text style={styles.perf}>Completion rate: {Math.round(d.completionRate * 100)}%</Text>
+          <View borderWidth={1} borderColor="$stroke2" borderRadius="$5" padding="$4.5" backgroundColor="$surface">
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={3} textTransform="uppercase" color="$accentBright">
+              PERFORMANCE
+            </Text>
+            <View gap="$1.5" marginTop="$3">
+              <View flexDirection="row" alignItems="center" gap="$2.5">
+                <Icon name="Timer" size={16} color={palette.muted} />
+                <Text fontFamily="$mono" fontSize={14} color="$ink">Focused hours: {d.focusedHours}</Text>
+              </View>
+              <View flexDirection="row" alignItems="center" gap="$2.5">
+                <Icon name="CheckCircle" size={16} color={palette.muted} />
+                <Text fontFamily="$mono" fontSize={14} color="$ink">Quests completed: {d.tasksCompleted}</Text>
+              </View>
+              <View flexDirection="row" alignItems="center" gap="$2.5">
+                <Icon name="Gauge" size={16} color={palette.muted} />
+                <Text fontFamily="$mono" fontSize={14} color="$ink">Completion rate: {Math.round(d.completionRate * 100)}%</Text>
+              </View>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "700", padding: 20 },
-  scroll: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
-  card: {
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 20,
-    padding: 18,
-    backgroundColor: colors.surface,
-  },
-  cardLabel: {
-    color: colors.redBright,
-    fontSize: 10,
-    letterSpacing: 3,
-    fontFamily: "monospace",
-    marginBottom: 12,
-  },
-  level: { color: colors.ink, fontSize: 40, fontWeight: "700", fontFamily: "monospace" },
-  xp: { color: colors.muted, fontSize: 14, fontFamily: "monospace", marginTop: 4 },
-  streak: { color: colors.faint, fontSize: 12, fontFamily: "monospace", marginTop: 8 },
-  attrGrid: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap", gap: 8 },
-  attr: { alignItems: "center", minWidth: 48 },
-  attrValue: { color: colors.ink, fontSize: 22, fontWeight: "700", fontFamily: "monospace" },
-  attrLabel: { color: colors.faint, fontSize: 10, letterSpacing: 1, fontFamily: "monospace" },
-  perf: { color: colors.ink, fontSize: 14, fontFamily: "monospace", marginTop: 6 },
-});

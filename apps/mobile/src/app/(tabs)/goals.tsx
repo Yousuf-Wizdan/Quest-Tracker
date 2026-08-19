@@ -1,22 +1,25 @@
+import { Text, View } from "@tamagui/core";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../theme";
+import { ScreenBackground } from "../../components/ScreenBackground";
+import { Icon } from "../../components/Icon";
+import { palette } from "../../palette";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 interface GoalHierarchy {
   id: string;
   title: string;
-  areas: Array<{
+  areas: {
     id: string;
     title: string;
-    projects: Array<{
+    projects: {
       id: string;
       title: string;
-      quests: Array<{ id: string; title: string; completedAt: string | null }>;
-    }>;
-  }>;
+      quests: { id: string; title: string; completedAt: string | null }[];
+    }[];
+  }[];
 }
 
 export default function GoalsScreen() {
@@ -30,25 +33,48 @@ export default function GoalsScreen() {
   }, []);
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe}>
-        <Text style={styles.title}>Goals</Text>
-        <ScrollView contentContainerStyle={styles.scroll}>
+    <ScreenBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+          <Text fontFamily="$display" fontSize="$9" fontWeight="700" color="$ink">
+            Goals
+          </Text>
+
           {goals.map((goal) => (
-            <View key={goal.id} style={styles.goal}>
-              <Text style={styles.goalTitle}>{goal.title}</Text>
+            <View key={goal.id} borderWidth={1} borderColor="$stroke2" borderRadius="$5" padding="$4" backgroundColor="$surface">
+              <View flexDirection="row" alignItems="center" gap="$2.5">
+                <Icon name="Target" size={18} color={palette.redBright} />
+                <Text fontFamily="$display" fontSize={18} fontWeight="700" color="$ink">
+                  {goal.title}
+                </Text>
+              </View>
+
               {goal.areas.map((area) => (
-                <View key={area.id} style={styles.area}>
-                  <Text style={styles.areaTitle}>{area.title}</Text>
+                <View key={area.id} marginTop="$3" paddingLeft="$3" borderLeftWidth={1} borderLeftColor="$stroke2">
+                  <Text fontFamily="$mono" fontSize={12} letterSpacing={2} textTransform="uppercase" color="$accentBright">
+                    {area.title}
+                  </Text>
+
                   {area.projects.map((project) => {
                     const done = project.quests.filter((q) => q.completedAt).length;
                     const total = project.quests.length;
+                    const pct = total === 0 ? 0 : Math.round((done / total) * 100);
                     return (
-                      <View key={project.id} style={styles.project}>
-                        <Text style={styles.projectTitle}>{project.title}</Text>
-                        <Text style={styles.projectMeta}>
-                          {done}/{total} quests complete
-                        </Text>
+                      <View key={project.id} borderWidth={1} borderColor="$stroke" borderRadius="$4" padding="$3" marginTop="$2" backgroundColor="$surface2">
+                        <View flexDirection="row" alignItems="center" justifyContent="space-between">
+                          <View flexDirection="row" alignItems="center" gap="$2" flex={1}>
+                            <Icon name="FolderKanban" size={16} color={palette.muted} />
+                            <Text fontFamily="$display" fontSize={14} fontWeight="600" color="$ink" numberOfLines={1}>
+                              {project.title}
+                            </Text>
+                          </View>
+                          <Text fontFamily="$mono" fontSize={11} color="$faint">
+                            {done}/{total}
+                          </Text>
+                        </View>
+                        <View height={5} borderRadius={3} backgroundColor="rgba(255,255,255,0.08)" overflow="hidden" marginTop="$2">
+                          <View height="100%" width={`${pct}%` as `${number}%`} backgroundColor="$accentBright" borderRadius={3} />
+                        </View>
                       </View>
                     );
                   })}
@@ -58,40 +84,6 @@ export default function GoalsScreen() {
           ))}
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "700", padding: 20 },
-  scroll: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
-  goal: {
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 20,
-    padding: 16,
-    backgroundColor: colors.surface,
-  },
-  goalTitle: { color: colors.ink, fontSize: 18, fontWeight: "700", marginBottom: 12 },
-  area: { marginTop: 8, paddingLeft: 8, borderLeftWidth: 1, borderLeftColor: colors.stroke2 },
-  areaTitle: {
-    color: colors.redBright,
-    fontSize: 12,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    fontFamily: "monospace",
-    marginBottom: 8,
-  },
-  project: {
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 8,
-    backgroundColor: colors.surface2,
-  },
-  projectTitle: { color: colors.ink, fontSize: 14, fontWeight: "600" },
-  projectMeta: { color: colors.faint, fontSize: 11, fontFamily: "monospace", marginTop: 4 },
-});

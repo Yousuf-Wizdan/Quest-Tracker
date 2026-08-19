@@ -1,7 +1,11 @@
+import { Text, View, styled } from "@tamagui/core";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../theme";
+import { ScreenBackground } from "../../components/ScreenBackground";
+import { Icon } from "../../components/Icon";
+import { Button } from "../../components/ui";
+import { palette } from "../../palette";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -24,15 +28,34 @@ interface DailyPlan {
 }
 
 interface ReplanResponse {
-  decisions: Array<{ questId: string; outcome: string }>;
+  decisions: { questId: string; outcome: string }[];
   systemMessage: { text: string; source: string };
 }
 
 const tierColor: Record<Tier, string> = {
-  MUST: colors.redBright,
-  SHOULD: colors.blueBright,
-  OPTIONAL: colors.faint,
+  MUST: palette.redBright,
+  SHOULD: palette.blueBright,
+  OPTIONAL: palette.faint,
 };
+
+const TIER_ICONS: Record<Tier, "Sparkle" | "Layers" | "Circle"> = {
+  MUST: "Sparkle",
+  SHOULD: "Layers",
+  OPTIONAL: "Circle",
+};
+
+const QuestTile = styled(Pressable, {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: "$3",
+  borderWidth: 1,
+  borderColor: "$stroke",
+  borderRadius: "$4",
+  paddingVertical: "$3",
+  paddingHorizontal: "$3",
+  backgroundColor: "$surface2",
+  pressStyle: { transform: [{ translateY: -2 }] },
+});
 
 export default function TodayScreen() {
   const [plan, setPlan] = useState<DailyPlan | null>(null);
@@ -63,38 +86,101 @@ export default function TodayScreen() {
   const focus = plan?.currentFocus?.quest;
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe}>
-        <Text style={styles.title}>Today</Text>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          {focus && (
-            <View style={styles.focusCard}>
-              <Text style={styles.focusLabel}>CURRENT FOCUS</Text>
-              <Text style={styles.focusTitle}>{focus.title}</Text>
-              <Text style={styles.focusMeta}>
-                {focus.tier} · {focus.estimateMinutes} min
+    <ScreenBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 32, gap: 12 }}>
+          <View flexDirection="row" alignItems="center" justifyContent="space-between">
+            <View>
+              <Text fontFamily="$display" fontSize="$9" fontWeight="700" color="$ink">
+                Today
               </Text>
-              {plan?.why.text ? (
-                <View style={styles.why}>
-                  <Text style={styles.whyLabel}>WHY THIS?</Text>
-                  <Text style={styles.whyText}>{plan.why.text}</Text>
+              <Text fontFamily="$serif" fontSize={12} fontStyle="italic" color="$muted" marginTop="$1">
+                Mon · Aug 16 · Day 214
+              </Text>
+            </View>
+            <View
+              width={40}
+              height={40}
+              borderRadius="$3"
+              borderWidth={1}
+              borderColor="$stroke2"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon name="Bell" size={17} color={palette.muted} />
+              <View position="absolute" top={8} right={9} width={7} height={7} borderRadius={99} backgroundColor="$accent" />
+            </View>
+          </View>
+
+          {focus && (
+            <View
+              borderWidth={1}
+              borderColor="$stroke2"
+              borderRadius="$5"
+              padding="$4.5"
+              backgroundColor="$surface"
+              overflow="hidden"
+              marginTop="$2"
+            >
+              <View flexDirection="row" justifyContent="space-between" alignItems="center">
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={3} textTransform="uppercase" color="$accentBright">
+                  Current Focus
+                </Text>
+                <View borderWidth={1} borderColor="$stroke2" borderRadius="$6" paddingVertical="$1" paddingHorizontal="$2.5">
+                  <Text fontFamily="$mono" fontSize={9} color="$muted">
+                    Reward <Text color="$accentBright" fontWeight="600">+180 XP</Text>
+                  </Text>
                 </View>
-              ) : null}
-              <Pressable style={styles.continueButton}>
-                <Text style={styles.continueText}>CONTINUE</Text>
-              </Pressable>
+              </View>
+
+              <Text fontFamily="$serif" fontSize={24} fontWeight="500" color="$ink" lineHeight={28} marginTop="$4">
+                {focus.title}
+              </Text>
+              <Text fontFamily="$mono" fontSize={10} color="$faint" marginTop="$2">
+                {focus.tier} · {focus.estimateMinutes} min · 72% complete
+              </Text>
+
+              <View flexDirection="row" gap="$2.5" alignItems="flex-start" marginTop="$4" borderTopWidth={1} borderTopColor="$stroke" paddingTop="$4">
+                <View width={28} height={28} borderRadius="$2" backgroundColor="$accentTint" borderWidth={1} borderColor="$accent" alignItems="center" justifyContent="center">
+                  <Icon name="Eye" size={13} color={palette.redBright} />
+                </View>
+                <View flex={1}>
+                  <Text fontFamily="$mono" fontSize={8} letterSpacing={2} textTransform="uppercase" color="$accentBright">
+                    Why this?
+                  </Text>
+                  <Text fontFamily="$serif" fontSize={12} color="$muted" lineHeight={18} marginTop="$1">
+                    {plan?.why.text}
+                  </Text>
+                </View>
+              </View>
+
+              <Button marginTop="$4">
+                <Icon name="Play" size={17} color={palette.white} />
+                CONTINUE
+              </Button>
             </View>
           )}
 
-          <Text style={styles.sectionLabel}>TODAY'S QUESTS</Text>
+          <View flexDirection="row" alignItems="baseline" justifyContent="space-between" marginTop="$2">
+            <Text fontFamily="$display" fontSize={14} fontWeight="700" color="$ink">
+              Today&apos;s Quests
+            </Text>
+            <Text fontFamily="$mono" fontSize={8} letterSpacing={1} textTransform="uppercase" color="$faint">
+              Must → Should → Optional
+            </Text>
+          </View>
 
           {replan && (
-            <View style={styles.replanBanner}>
-              <Text style={styles.replanLabel}>ADAPTIVE REPLAN</Text>
-              <Text style={styles.replanMessage}>{replan.systemMessage.text}</Text>
-              <View style={styles.replanActions}>
+            <View borderWidth={1} borderStyle="dashed" borderColor="$accent" borderRadius="$4" padding="$3.5" backgroundColor="$accentTint">
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={2} textTransform="uppercase" color="$accentBright">
+                ADAPTIVE REPLAN
+              </Text>
+              <Text fontFamily="$serif" fontSize={12} color="$ink" lineHeight={18} marginTop="$1.5">
+                {replan.systemMessage.text}
+              </Text>
+              <View flexDirection="row" flexWrap="wrap" gap="$1.5" marginTop="$2.5">
                 {replan.decisions.map((d) => (
-                  <Text key={d.questId} style={styles.replanTag}>
+                  <Text key={d.questId} fontFamily="$mono" fontSize={9} letterSpacing={1} color="$muted" borderWidth={1} borderColor="$stroke" borderRadius="$2" paddingVertical="$1" paddingHorizontal="$2">
                     {d.outcome}
                   </Text>
                 ))}
@@ -102,138 +188,40 @@ export default function TodayScreen() {
             </View>
           )}
 
-          <Pressable style={styles.replanButton} onPress={triggerReplan}>
-            <Text style={styles.replanButtonText}>TRIGGER REPLAN</Text>
+          <Pressable onPress={triggerReplan} style={{ borderWidth: 1, borderColor: palette.stroke2, borderRadius: 12, paddingVertical: 10, alignItems: "center" }}>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$muted">
+              TRIGGER REPLAN
+            </Text>
           </Pressable>
 
-          {plan?.scheduled.map((quest) => (
-            <View
-              key={quest.id}
-              style={[
-                styles.quest,
-                { borderLeftColor: tierColor[quest.tier] },
-              ]}
-            >
-              <View style={styles.questBody}>
-                <Text style={[styles.questTier, { color: tierColor[quest.tier] }]}>
-                  {quest.tier}
-                </Text>
-                <Text style={[styles.questTitle, quest.completed && styles.done]}>
-                  {quest.title}
-                </Text>
-                <Text style={styles.questMeta}>
-                  {quest.estimateMinutes} min · {quest.cognitiveLoad}
-                </Text>
-              </View>
-            </View>
-          ))}
+          <View flexDirection="row" flexWrap="wrap" gap="$2.5">
+            {plan?.scheduled.map((quest) => (
+              <QuestTile key={quest.id} style={{ width: "48%" }}>
+                <View
+                  width={36}
+                  height={36}
+                  borderRadius="$3"
+                  alignItems="center"
+                  justifyContent="center"
+                  backgroundColor={quest.completed ? palette.red : "rgba(255,255,255,0.03)"}
+                  borderWidth={1}
+                  borderColor={quest.completed ? palette.red : palette.stroke}
+                >
+                  <Icon name={TIER_ICONS[quest.tier]} size={17} color={quest.completed ? palette.white : tierColor[quest.tier]} />
+                </View>
+                <View flex={1}>
+                  <Text fontFamily="$display" fontSize={13} fontWeight="600" color={quest.completed ? "$muted" : "$ink"} numberOfLines={1}>
+                    {quest.title}
+                  </Text>
+                  <Text fontFamily="$mono" fontSize={8} color="$faint" marginTop="$1" numberOfLines={1}>
+                    {quest.tier} · {quest.estimateMinutes} min
+                  </Text>
+                </View>
+              </QuestTile>
+            ))}
+          </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "700", padding: 20 },
-  scroll: { paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
-  focusCard: {
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 20,
-    padding: 18,
-    backgroundColor: "rgba(244,66,62,0.08)",
-  },
-  focusLabel: {
-    color: colors.redBright,
-    fontSize: 10,
-    letterSpacing: 3,
-    fontFamily: "monospace",
-  },
-  focusTitle: { color: colors.ink, fontSize: 22, fontWeight: "700", marginTop: 8 },
-  focusMeta: { color: colors.muted, fontSize: 12, fontFamily: "monospace", marginTop: 4 },
-  why: {
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.stroke,
-    paddingTop: 12,
-  },
-  whyLabel: { color: colors.redBright, fontSize: 9, letterSpacing: 2, fontFamily: "monospace" },
-  whyText: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 4 },
-  continueButton: {
-    backgroundColor: colors.red,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  continueText: {
-    color: "#ffffff",
-    fontSize: 14,
-    letterSpacing: 2,
-    fontWeight: "700",
-    fontFamily: "monospace",
-  },
-  sectionLabel: {
-    color: colors.faint,
-    fontSize: 11,
-    letterSpacing: 2,
-    fontFamily: "monospace",
-    marginTop: 16,
-    marginBottom: 4,
-  },
-  quest: {
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderLeftWidth: 3,
-    borderRadius: 14,
-    padding: 14,
-    backgroundColor: colors.surface2,
-  },
-  questBody: { gap: 4 },
-  questTier: {
-    fontSize: 9,
-    letterSpacing: 2,
-    fontFamily: "monospace",
-    fontWeight: "700",
-  },
-  questTitle: { color: colors.ink, fontSize: 14, fontWeight: "600" },
-  done: { color: colors.muted, textDecorationLine: "line-through" },
-  questMeta: { color: colors.faint, fontSize: 11, fontFamily: "monospace" },
-  replanBanner: {
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: colors.red,
-    borderRadius: 16,
-    padding: 14,
-    backgroundColor: "rgba(244,66,62,0.05)",
-  },
-  replanLabel: { color: colors.redBright, fontSize: 10, letterSpacing: 2, fontFamily: "monospace" },
-  replanMessage: { color: colors.ink, fontSize: 13, lineHeight: 18, marginTop: 6 },
-  replanActions: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
-  replanTag: {
-    color: colors.muted,
-    fontSize: 9,
-    letterSpacing: 1,
-    fontFamily: "monospace",
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderRadius: 8,
-    padding: 4,
-    paddingHorizontal: 8,
-  },
-  replanButton: {
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  replanButtonText: {
-    color: colors.muted,
-    fontSize: 10,
-    letterSpacing: 2,
-    fontFamily: "monospace",
-  },
-});

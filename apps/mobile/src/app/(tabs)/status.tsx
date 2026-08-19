@@ -1,8 +1,12 @@
+import { Text, View } from "@tamagui/core";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { AttributeMap } from "@ascent/types";
-import { colors } from "../../theme";
+import { ScreenBackground, XPBar } from "../../components/ScreenBackground";
+import { Icon } from "../../components/Icon";
+import { Button } from "../../components/ui";
+import { palette } from "../../palette";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -19,6 +23,15 @@ function levelFromXp(totalXp: number) {
     xpToNext: 10_000 - (totalXp % 10_000),
   };
 }
+
+const ATTR_ICONS = {
+  STR: "Dumbbell",
+  INT: "Brain",
+  VIT: "HeartPulse",
+  FOC: "Crosshair",
+  DIS: "Shield",
+  CON: "Flame",
+} as const;
 
 export default function StatusScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -37,174 +50,123 @@ export default function StatusScreen() {
   };
   const data = profile ?? fallback;
   const { level, xpIntoLevel, xpToNext } = levelFromXp(data.totalXp);
+  const pct = Math.min(100, (xpIntoLevel / 10_000) * 100);
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.eyebrow}>Status Window</Text>
-          <Text style={styles.title}>Daily Quest OS</Text>
-
-          <View style={styles.ribbon}>
-            <View style={styles.ribbonTop}>
-              <Text style={styles.levelTag}>LV {level}</Text>
-              <Text style={styles.next}>LV {level + 1} · {Math.round((xpIntoLevel / 10_000) * 100)}%</Text>
+    <ScreenBackground>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+          <View flexDirection="row" alignItems="center" justifyContent="space-between">
+            <View>
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={3} textTransform="uppercase" color="$faint">
+                Status Window
+              </Text>
+              <Text fontFamily="$display" fontSize="$9" fontWeight="700" color="$ink" letterSpacing={-0.5} marginTop="$1">
+                Daily Quest OS
+              </Text>
             </View>
-            <Text style={styles.xp}>
-              {xpIntoLevel.toLocaleString()} <Text style={styles.xpDim}>/ 10,000 XP</Text>
-            </Text>
-            <View style={styles.bar}>
-              <View style={[styles.barFill, { width: `${Math.min(100, (xpIntoLevel / 10_000) * 100)}%` }]} />
+            <View
+              width={40}
+              height={40}
+              borderRadius="$3"
+              borderWidth={1}
+              borderColor="$stroke2"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon name="Bell" size={17} color={palette.muted} />
+              <View
+                position="absolute"
+                top={8}
+                right={9}
+                width={7}
+                height={7}
+                borderRadius={99}
+                backgroundColor="$accent"
+              />
             </View>
           </View>
 
-          <View style={styles.attrs}>
-            {(Object.keys(data.attributes) as Array<keyof AttributeMap>).map((key) => (
-              <View key={key} style={styles.attr}>
-                <Text style={styles.attrValue}>{data.attributes[key]}</Text>
-                <Text style={styles.attrLabel}>{key}</Text>
+          <View
+            borderWidth={1}
+            borderColor="$stroke2"
+            borderRadius="$5"
+            padding="$4.5"
+            backgroundColor="$surface"
+            overflow="hidden"
+            marginTop="$3"
+          >
+            <View flexDirection="row" alignItems="baseline" justifyContent="space-between">
+              <View flexDirection="row" alignItems="baseline" gap="$2.5">
+                <Text fontFamily="$mono" fontSize={20} fontWeight="700" color="$accentBright">
+                  LV {level}
+                </Text>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} textTransform="uppercase" color="$muted">
+                  Focused Operator
+                </Text>
+              </View>
+              <Text fontFamily="$mono" fontSize={10} color="$faint">
+                LV {level + 1} · <Text color="$accentBright" fontWeight="600">{Math.round(pct)}%</Text>
+              </Text>
+            </View>
+
+            <View flexDirection="row" alignItems="baseline" justifyContent="space-between" marginTop="$3">
+              <Text fontFamily="$mono" fontSize={22} fontWeight="700" color="$ink">
+                {xpIntoLevel.toLocaleString()} <Text fontSize={13} fontWeight="400" color="$muted">/ 10,000 XP</Text>
+              </Text>
+              <Text fontFamily="$mono" fontSize={9} letterSpacing={1} textTransform="uppercase" color="$faint">
+                {xpToNext.toLocaleString()} to next
+              </Text>
+            </View>
+
+            <View marginTop="$3">
+              <XPBar progress={pct} />
+            </View>
+          </View>
+
+          <View flexDirection="row" justifyContent="space-between" marginTop="$1">
+            {(Object.keys(data.attributes) as (keyof AttributeMap)[]).map((key) => (
+              <View key={key} alignItems="center" gap="$1.5">
+                <View
+                  width={44}
+                  height={44}
+                  borderRadius="$3"
+                  borderWidth={1}
+                  borderColor="$stroke"
+                  backgroundColor="rgba(255,255,255,0.03)"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Icon name={ATTR_ICONS[key]} size={18} color={palette.muted} />
+                </View>
+                <Text fontFamily="$mono" fontSize={16} fontWeight="700" color="$ink">
+                  {data.attributes[key]}
+                </Text>
+                <Text fontFamily="$mono" fontSize={8} letterSpacing={1} color="$faint">
+                  {key}
+                </Text>
               </View>
             ))}
           </View>
 
-          <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>STREAK</Text>
-            <Text style={styles.statusValue}>{data.streak} days</Text>
+          <View flexDirection="row" justifyContent="space-between" borderWidth={1} borderColor="$stroke" borderRadius="$4" padding="$4">
+            <View flexDirection="row" alignItems="center" gap="$2.5">
+              <Icon name="Flame" size={18} color={palette.redBright} />
+              <Text fontFamily="$mono" fontSize={11} letterSpacing={2} textTransform="uppercase" color="$faint">
+                STREAK
+              </Text>
+            </View>
+            <Text fontFamily="$mono" fontSize={13} color="$ink">
+              {data.streak} days
+            </Text>
           </View>
 
-          <Pressable style={styles.button} onPress={() => undefined}>
-            <Text style={styles.buttonText}>CONTINUE</Text>
-          </Pressable>
+          <Button size="lg" marginTop="$2">
+            <Icon name="Play" size={17} color={palette.white} />
+            CONTINUE
+          </Button>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  safe: {
-    flex: 1,
-  },
-  scroll: {
-    padding: 20,
-    gap: 16,
-  },
-  eyebrow: {
-    color: colors.faint,
-    fontSize: 10,
-    letterSpacing: 3,
-    textTransform: "uppercase",
-    fontFamily: "monospace",
-  },
-  title: {
-    color: colors.ink,
-    fontSize: 32,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
-  ribbon: {
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 20,
-    padding: 18,
-    backgroundColor: colors.surface,
-    marginTop: 12,
-  },
-  ribbonTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-  },
-  levelTag: {
-    color: colors.redBright,
-    fontSize: 20,
-    fontWeight: "700",
-    fontFamily: "monospace",
-  },
-  next: {
-    color: colors.faint,
-    fontSize: 11,
-    fontFamily: "monospace",
-  },
-  xp: {
-    color: colors.ink,
-    fontSize: 24,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    marginTop: 8,
-  },
-  xpDim: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "400",
-  },
-  bar: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    overflow: "hidden",
-    marginTop: 12,
-  },
-  barFill: {
-    height: "100%",
-    backgroundColor: colors.red,
-    borderRadius: 4,
-  },
-  attrs: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  attr: {
-    alignItems: "center",
-  },
-  attrValue: {
-    color: colors.ink,
-    fontSize: 18,
-    fontWeight: "700",
-    fontFamily: "monospace",
-  },
-  attrLabel: {
-    color: colors.faint,
-    fontSize: 9,
-    letterSpacing: 1,
-    fontFamily: "monospace",
-  },
-  statusRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderRadius: 14,
-    padding: 16,
-  },
-  statusLabel: {
-    color: colors.faint,
-    fontSize: 11,
-    letterSpacing: 2,
-    fontFamily: "monospace",
-  },
-  statusValue: {
-    color: colors.ink,
-    fontSize: 13,
-    fontFamily: "monospace",
-  },
-  button: {
-    backgroundColor: colors.red,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    letterSpacing: 2,
-    fontWeight: "700",
-    fontFamily: "monospace",
-  },
-});

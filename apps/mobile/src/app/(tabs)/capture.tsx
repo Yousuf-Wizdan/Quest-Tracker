@@ -1,7 +1,11 @@
+import { Text, View } from "@tamagui/core";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../theme";
+import { ScreenBackground } from "../../components/ScreenBackground";
+import { Icon } from "../../components/Icon";
+import { Button } from "../../components/ui";
+import { palette } from "../../palette";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -10,6 +14,25 @@ interface InboxItem {
   kind: "task" | "idea" | "note";
   content: string;
 }
+
+const KIND_ICONS = {
+  task: "SquareCheck",
+  idea: "Lightbulb",
+  note: "FileText",
+} as const;
+
+const inputStyle = {
+  marginTop: 16,
+  borderWidth: 1,
+  borderColor: palette.stroke2,
+  borderRadius: 16,
+  padding: 14,
+  color: palette.ink,
+  fontSize: 15,
+  minHeight: 80,
+  textAlignVertical: "top",
+  fontFamily: "JetBrainsMono_400Regular",
+} as const;
 
 export default function CaptureScreen() {
   const [kind, setKind] = useState<"task" | "idea" | "note">("task");
@@ -40,18 +63,30 @@ export default function CaptureScreen() {
   }
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safe}>
-        <Text style={styles.title}>Capture</Text>
+    <ScreenBackground>
+      <SafeAreaView style={{ flex: 1, padding: 20 }}>
+        <Text fontFamily="$display" fontSize="$9" fontWeight="700" color="$ink">
+          Capture
+        </Text>
 
-        <View style={styles.kindRow}>
+        <View flexDirection="row" gap="$2" marginTop="$4">
           {(["task", "idea", "note"] as const).map((k) => (
             <Pressable
               key={k}
-              style={[styles.kindButton, kind === k && styles.kindActive]}
               onPress={() => setKind(k)}
+              style={{
+                flex: 1,
+                borderWidth: 1,
+                borderColor: kind === k ? palette.red : palette.stroke2,
+                borderRadius: 12,
+                paddingVertical: 10,
+                alignItems: "center",
+                gap: 6,
+                backgroundColor: kind === k ? palette.red : "transparent",
+              }}
             >
-              <Text style={[styles.kindText, kind === k && styles.kindTextActive]}>
+              <Icon name={KIND_ICONS[k]} size={16} color={kind === k ? palette.white : palette.muted} />
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color={kind === k ? "$white" : "$muted"}>
                 {k.toUpperCase()}
               </Text>
             </Pressable>
@@ -59,75 +94,35 @@ export default function CaptureScreen() {
         </View>
 
         <TextInput
-          style={styles.input}
+          style={inputStyle}
           value={content}
           onChangeText={setContent}
           placeholder="Capture a thought…"
-          placeholderTextColor={colors.faint}
+          placeholderTextColor={palette.faint}
           multiline
         />
 
-        <Pressable style={styles.captureButton} onPress={capture}>
-          <Text style={styles.captureText}>+ CAPTURE</Text>
-        </Pressable>
+        <Button onPress={capture} marginTop="$3">
+          <Icon name="Plus" size={17} color={palette.white} />
+          CAPTURE
+        </Button>
 
-        <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        <ScrollView style={{ flex: 1, marginTop: 16 }} contentContainerStyle={{ gap: 8, paddingBottom: 24 }}>
           {items.map((item) => (
-            <View key={item.id} style={styles.item}>
-              <Text style={styles.itemKind}>{item.kind.toUpperCase()}</Text>
-              <Text style={styles.itemContent}>{item.content}</Text>
+            <View key={item.id} borderWidth={1} borderColor="$stroke" borderRadius="$3" padding="$3" backgroundColor="$surface2">
+              <View flexDirection="row" alignItems="center" gap="$2">
+                <Icon name={KIND_ICONS[item.kind]} size={14} color={palette.faint} />
+                <Text fontFamily="$mono" fontSize={9} letterSpacing={2} color="$faint">
+                  {item.kind.toUpperCase()}
+                </Text>
+              </View>
+              <Text fontFamily="$display" fontSize={13} color="$ink" marginTop="$2">
+                {item.content}
+              </Text>
             </View>
           ))}
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1, padding: 20 },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "700" },
-  kindRow: { flexDirection: "row", gap: 8, marginTop: 16 },
-  kindButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  kindActive: { backgroundColor: colors.red, borderColor: colors.red },
-  kindText: { color: colors.muted, fontSize: 10, letterSpacing: 2, fontFamily: "monospace" },
-  kindTextActive: { color: "#ffffff" },
-  input: {
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: colors.stroke2,
-    borderRadius: 14,
-    padding: 14,
-    color: colors.ink,
-    fontSize: 15,
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  captureButton: {
-    backgroundColor: colors.red,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 12,
-  },
-  captureText: { color: "#ffffff", fontSize: 14, letterSpacing: 2, fontWeight: "700", fontFamily: "monospace" },
-  list: { flex: 1, marginTop: 16 },
-  listContent: { gap: 8, paddingBottom: 24 },
-  item: {
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: colors.surface2,
-  },
-  itemKind: { color: colors.faint, fontSize: 9, letterSpacing: 2, fontFamily: "monospace" },
-  itemContent: { color: colors.ink, fontSize: 13, marginTop: 4 },
-});
